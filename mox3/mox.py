@@ -103,9 +103,9 @@ class ExpectedMethodCallsError(Error):
         self._expected_methods = expected_methods
 
     def __str__(self):
-        calls = "\n".join(["%3d.  %s" % (i, m)
+        calls = "\n".join(["{0:3d}.  {1!s}".format(i, m)
                           for i, m in enumerate(self._expected_methods)])
-        return "Verify: Expected methods never called:\n%s" % (calls,)
+        return "Verify: Expected methods never called:\n{0!s}".format(calls)
 
 
 class UnexpectedMethodCallError(Error):
@@ -129,7 +129,7 @@ class UnexpectedMethodCallError(Error):
 
         Error.__init__(self)
         if expected is None:
-            self._str = "Unexpected method call %s" % (unexpected_method,)
+            self._str = "Unexpected method call {0!s}".format(unexpected_method)
         else:
             differ = difflib.Differ()
             diff = differ.compare(str(unexpected_method).splitlines(True),
@@ -158,8 +158,8 @@ class UnknownMethodCallError(Error):
         self._unknown_method_name = unknown_method_name
 
     def __str__(self):
-        return ("Method called is not a member of the object: %s" %
-                self._unknown_method_name)
+        return ("Method called is not a member of the object: {0!s}".format(
+                self._unknown_method_name))
 
 
 class PrivateAttributeError(Error):
@@ -194,9 +194,9 @@ class ExpectedMockCreationError(Error):
         self._expected_mocks = expected_mocks
 
     def __str__(self):
-        mocks = "\n".join(["%3d.  %s" % (i, m)
+        mocks = "\n".join(["{0:3d}.  {1!s}".format(i, m)
                           for i, m in enumerate(self._expected_mocks)])
-        return "Verify: Expected mocks never created:\n%s" % (mocks,)
+        return "Verify: Expected mocks never created:\n{0!s}".format(mocks)
 
 
 class UnexpectedMockCreationError(Error):
@@ -217,11 +217,11 @@ class UnexpectedMockCreationError(Error):
         self._named_params = named_params
 
     def __str__(self):
-        args = ", ".join(["%s" % v for i, v in enumerate(self._params)])
-        error = "Unexpected mock creation: %s(%s" % (self._instance, args)
+        args = ", ".join(["{0!s}".format(v) for i, v in enumerate(self._params)])
+        error = "Unexpected mock creation: {0!s}({1!s}".format(self._instance, args)
 
         if self._named_params:
-            error += ", " + ", ".join(["%s=%s" % (k, v) for k, v in
+            error += ", " + ", ".join(["{0!s}={1!s}".format(k, v) for k, v in
                                       self._named_params.items()])
 
         error += ")"
@@ -329,7 +329,7 @@ class Mox(object):
             stub = self.CreateMock(attr_to_replace, bounded_to=class_to_bind)
         else:
             stub = self.CreateMockAnything(
-                description='Stub for %s' % attr_to_replace)
+                description='Stub for {0!s}'.format(attr_to_replace))
             stub.__name__ = attr_name
 
         self.stubs.Set(obj, attr_name, stub)
@@ -443,7 +443,7 @@ class MockAnything(object):
 
     def __repr__(self):
         if self._description:
-            return '<MockAnything instance of %s>' % self._description
+            return '<MockAnything instance of {0!s}>'.format(self._description)
         else:
             return '<MockAnything instance>'
 
@@ -612,7 +612,7 @@ class MockObject(MockAnything):
             if attr.startswith("_"):
                 raise PrivateAttributeError(attr)
             elif attr in self._known_methods:
-                raise ValueError("'%s' is a method of '%s' objects." % (attr,
+                raise ValueError("'{0!s}' is a method of '{1!s}' objects.".format(attr,
                                  class_to_mock))
             else:
                 setattr(self, attr, value)
@@ -908,8 +908,7 @@ class MethodSignatureChecker(object):
         try:
             self._args, varargs, varkw, defaults = inspect.getargspec(method)
         except TypeError:
-            raise ValueError('Could not get argument specification for %r'
-                             % (method,))
+            raise ValueError('Could not get argument specification for {0!r}'.format(method))
         if (inspect.ismethod(method) or class_to_bind or (
                 hasattr(self, '_args') and len(self._args) > 0
                 and self._args[0] == 'self')):
@@ -948,7 +947,7 @@ class MethodSignatureChecker(object):
             AttributeError: arg_name is already marked as _GIVEN.
         """
         if arg_status.get(arg_name, None) == MethodSignatureChecker._GIVEN:
-            raise AttributeError('%s provided more than once' % (arg_name,))
+            raise AttributeError('{0!s} provided more than once'.format(arg_name))
         arg_status[arg_name] = MethodSignatureChecker._GIVEN
 
     def Check(self, params, named_params):
@@ -1019,16 +1018,14 @@ class MethodSignatureChecker(object):
         # Check each keyword argument.
         for arg_name in named_params:
             if arg_name not in arg_status and not self._has_varkw:
-                raise AttributeError('%s is not expecting keyword argument %s'
-                                     % (self._method.__name__, arg_name))
+                raise AttributeError('{0!s} is not expecting keyword argument {1!s}'.format(self._method.__name__, arg_name))
             self._RecordArgumentGiven(arg_name, arg_status)
 
         # Ensure all the required arguments have been given.
         still_needed = [k for k, v in arg_status.items()
                         if v == MethodSignatureChecker._NEEDED]
         if still_needed:
-            raise AttributeError('No values given for arguments: %s'
-                                 % (' '.join(sorted(still_needed))))
+            raise AttributeError('No values given for arguments: {0!s}'.format((' '.join(sorted(still_needed)))))
 
 
 class MockMethod(object):
@@ -1184,10 +1181,10 @@ class MockMethod(object):
     def __str__(self):
         params = ', '.join(
             [repr(p) for p in self._params or []] +
-            ['%s=%r' % x for x in sorted((self._named_params or {}).items())])
-        full_desc = "%s(%s) -> %r" % (self._name, params, self._return_value)
+            ['{0!s}={1!r}'.format(*x) for x in sorted((self._named_params or {}).items())])
+        full_desc = "{0!s}({1!s}) -> {2!r}".format(self._name, params, self._return_value)
         if self._description:
-            full_desc = "%s.%s" % (self._description, full_desc)
+            full_desc = "{0!s}.{1!s}".format(self._description, full_desc)
         return full_desc
 
     def __hash__(self):
@@ -1375,7 +1372,7 @@ class Is(Comparator):
         return rhs is self._obj
 
     def __repr__(self):
-        return "<is %r (%s)>" % (self._obj, id(self._obj))
+        return "<is {0!r} ({1!s})>".format(self._obj, id(self._obj))
 
 
 class IsA(Comparator):
@@ -1431,7 +1428,7 @@ class IsA(Comparator):
             return type(clazz) == type(self._class_name)
 
     def __repr__(self):
-        return 'mox.IsA(%s) ' % str(self._class_name)
+        return 'mox.IsA({0!s}) '.format(str(self._class_name))
 
 
 class IsAlmost(Comparator):
@@ -1508,7 +1505,7 @@ class StrContains(Comparator):
             return False
 
     def __repr__(self):
-        return '<str containing \'%s\'>' % self._search_string
+        return '<str containing \'{0!s}\'>'.format(self._search_string)
 
 
 class Regex(Comparator):
@@ -1542,9 +1539,9 @@ class Regex(Comparator):
             return False
 
     def __repr__(self):
-        s = '<regular expression \'%s\'' % self.regex.pattern
+        s = '<regular expression \'{0!s}\''.format(self.regex.pattern)
         if self.flags:
-            s += ', flags=%d' % self.flags
+            s += ', flags={0:d}'.format(self.flags)
         s += '>'
         return s
 
@@ -1581,7 +1578,7 @@ class In(Comparator):
             return False
 
     def __repr__(self):
-        return '<sequence or map containing \'%s\'>' % str(self._key)
+        return '<sequence or map containing \'{0!s}\'>'.format(str(self._key))
 
 
 class Not(Comparator):
@@ -1619,7 +1616,7 @@ class Not(Comparator):
             return False
 
     def __repr__(self):
-        return '<not \'%s\'>' % self._predicate
+        return '<not \'{0!s}\'>'.format(self._predicate)
 
 
 class ContainsKeyValue(Comparator):
@@ -1653,7 +1650,7 @@ class ContainsKeyValue(Comparator):
             return False
 
     def __repr__(self):
-        return '<map containing the entry \'%s: %s\'>' % (str(self._key),
+        return '<map containing the entry \'{0!s}: {1!s}\'>'.format(str(self._key),
                                                           str(self._value))
 
 
@@ -1737,7 +1734,7 @@ class SameElementsAs(Comparator):
         return True
 
     def __repr__(self):
-        return '<sequence with same elements as \'%s\'>' % self._expected_list
+        return '<sequence with same elements as \'{0!s}\'>'.format(self._expected_list)
 
 
 class And(Comparator):
@@ -1770,7 +1767,7 @@ class And(Comparator):
         return True
 
     def __repr__(self):
-        return '<AND %s>' % str(self._comparators)
+        return '<AND {0!s}>'.format(str(self._comparators))
 
 
 class Or(Comparator):
@@ -1802,7 +1799,7 @@ class Or(Comparator):
         return False
 
     def __repr__(self):
-        return '<OR %s>' % str(self._comparators)
+        return '<OR {0!s}>'.format(str(self._comparators))
 
 
 class Func(Comparator):
@@ -1899,7 +1896,7 @@ class Value(Comparator):
 
     def __repr__(self):
         if self._has_value:
-            return "<Value %r>" % self._value
+            return "<Value {0!r}>".format(self._value)
         else:
             return "<Value>"
 
@@ -1929,7 +1926,7 @@ class Remember(Comparator):
         return True
 
     def __repr__(self):
-        return "<Remember %d>" % id(self._value_store)
+        return "<Remember {0:d}>".format(id(self._value_store))
 
 
 class MethodGroup(object):
@@ -1942,7 +1939,7 @@ class MethodGroup(object):
         return self._group_name
 
     def __str__(self):
-        return '<%s "%s">' % (self.__class__.__name__, self._group_name)
+        return '<{0!s} "{1!s}">'.format(self.__class__.__name__, self._group_name)
 
     def AddMethod(self, mock_method):
         raise NotImplementedError
@@ -1966,7 +1963,7 @@ class UnorderedGroup(MethodGroup):
         self._methods = []
 
     def __str__(self):
-        return '%s "%s" pending calls:\n%s' % (
+        return '{0!s} "{1!s}" pending calls:\n{2!s}'.format(
             self.__class__.__name__,
             self._group_name,
             "\n".join(str(method) for method in self._methods))
