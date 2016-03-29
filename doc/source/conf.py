@@ -46,7 +46,7 @@ pygments_style = 'sphinx'
 html_static_path = ['static']
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = '%sdoc' % project
+htmlhelp_basename = '{0!s}doc'.format(project)
 
 git_cmd = "git log --pretty=format:'%ad, commit %h' --date=local -n1"
 html_last_updated_fmt = os.popen(git_cmd).read()
@@ -56,7 +56,7 @@ html_last_updated_fmt = os.popen(git_cmd).read()
 # [howto/manual]).
 latex_documents = [
     ('index',
-     '%s.tex' % project,
-     '%s Documentation' % project,
+     '{0!s}.tex'.format(project),
+     '{0!s} Documentation'.format(project),
      'OpenStack Foundation', 'manual'),
 ]
